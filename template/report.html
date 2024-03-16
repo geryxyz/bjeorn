@@ -1,0 +1,49 @@
+{% macro name_display(name_ipa) %}
+    <th>{{ ipa_name_to_hun(name_ipa, valid_names) }}</th>&nbsp;
+    <td>[{{ name_ipa }}]</td>
+{% endmacro %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report</title>
+</head>
+<body>
+<h1>Report</h1>
+
+<h2>Similar names</h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>IPA</th>
+        <th>Similarity</th>
+    </tr>
+    {% for name in similar_names %}
+        <tr>
+            {{ name_display(name) }}
+            <td>
+                {{ similarity_to(name, reference_name_ipa, distances) }}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+
+<h2>Names of Reference Community</h2>
+<table>
+    <tr>
+        <th>Name</th>
+        <th>IPA</th>
+        <th>Similarity</th>
+    </tr>
+    {% for name in names_of_reference_community %}
+        <tr>
+            {{ name_display(name) }}
+            <td>
+                {{ similarity_to(name, reference_name_ipa, distances) }}
+            </td>
+        </tr>
+    {% endfor %}
+</table>
+</body>
+</html>
