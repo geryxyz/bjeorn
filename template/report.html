@@ -47,7 +47,7 @@
 <body>
 <h1>Report</h1>
 
-<h2>Similar names</h2>
+<h2>Similar Names ({{ similar_names | length }} names) to {{ reference_name }}</h2>
 <table>
     <tr>
         <th>Name</th>
@@ -59,7 +59,7 @@
     {% endfor %}
 </table>
 
-<h2>Names of Reference Community</h2>
+<h2>Names of Reference Community ({{ names_of_reference_community | length }} names)</h2>
 <table>
     <tr>
         <th>Name</th>

@@ -145,7 +145,7 @@ def main():
     )
 
     name_ipa = valid_names.loc[valid_names.loc[:, 'name'] == name, 'ipa'].values[0]
-    similar_count = 10
+    similar_count = 30
     similar_names = distances.loc[:, name_ipa].sort_values().head(similar_count).index
 
     reference_community = valid_names.loc[valid_names.loc[:, 'name'] == name, 'community'].values[0]
