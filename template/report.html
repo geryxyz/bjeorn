@@ -1,6 +1,18 @@
-{% macro name_display(name_ipa) %}
-    <th>{{ ipa_name_to_hun(name_ipa, valid_names) }}</th>&nbsp;
-    <td>[{{ name_ipa }}]</td>
+{% macro name_display(name_entry) %}
+    <tr>
+        <th class="{{ name_entry['sex'] }}">
+            {{ name_entry['name'] }}
+        </th>
+        {% if name_entry['sex'] == 'male' %}
+            <td>&male;</td>
+        {% elif name_entry['sex'] == 'female' %}
+            <td>&female;</td>
+        {% else %}
+            <td>?</td>
+        {% endif %}
+        <td>[{{ name_entry['ipa'] }}]</td>
+        <td class="number">{{ name_entry['similarity'] | round(1) }}</td>
+    </tr>
 {% endmacro %}
 
 <!DOCTYPE html>
@@ -8,6 +20,29 @@
 <head>
     <meta charset="UTF-8">
     <title>Report</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: none;
+            padding: 8px;
+        }
+
+        th.male {
+            background: lightblue;
+        }
+
+        th.female {
+            background: lightpink;
+        }
+
+        td.number {
+            text-align: right;
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
 <h1>Report</h1>
@@ -19,13 +54,8 @@
         <th>IPA</th>
         <th>Similarity</th>
     </tr>
-    {% for name in similar_names %}
-        <tr>
-            {{ name_display(name) }}
-            <td>
-                {{ similarity_to(name, reference_name_ipa, distances) }}
-            </td>
-        </tr>
+    {% for name_entry in name_entries_from_ipas(similar_names, valid_names, reference_name_ipa, distances) | sort(attribute='similarity') %}
+        {{ name_display(name_entry) }}
     {% endfor %}
 </table>
 
@@ -36,13 +66,8 @@
         <th>IPA</th>
         <th>Similarity</th>
     </tr>
-    {% for name in names_of_reference_community %}
-        <tr>
-            {{ name_display(name) }}
-            <td>
-                {{ similarity_to(name, reference_name_ipa, distances) }}
-            </td>
-        </tr>
+    {% for name_entry in name_entries_from_ipas(names_of_reference_community, valid_names, reference_name_ipa, distances) | sort(attribute='similarity') %}
+        {{ name_display(name_entry) }}
     {% endfor %}
 </table>
 </body>

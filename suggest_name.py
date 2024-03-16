@@ -4,7 +4,7 @@ import re
 import subprocess
 from pathlib import Path
 from timeit import timeit
-from typing import NamedTuple
+from typing import NamedTuple, Any
 
 import epitran
 import epitran.vector
@@ -108,12 +108,27 @@ def community_id_of_name(name: str, communities: list[set[str]]) -> int:
     raise ValueError(f"Name {name} not found in any community")
 
 
-def ipa_name_to_hun(ipa_name: str, valid_names: pandas.DataFrame) -> str:
-    return valid_names.loc[valid_names.loc[:, 'ipa'] == ipa_name, 'name'].values[0]
-
-
 def similarity_to(name_ipa1: str, name_ipa2: str, distances: pandas.DataFrame) -> float:
     return distances.loc[name_ipa1, name_ipa2]
+
+
+def name_entry_from_ipa(
+    ipa: str, valid_names: pandas.DataFrame,
+    reference_ipa: str, distances: pandas.DataFrame
+) -> dict[str, Any]:
+    entry = valid_names.loc[valid_names.loc[:, 'ipa'] == ipa].iloc[0].to_dict()
+    entry['similarity'] = similarity_to(ipa, reference_ipa, distances)
+    return entry
+
+
+def name_entries_from_ipas(
+    ipas: list[str], valid_names: pandas.DataFrame,
+    reference_ipa: str, distances: pandas.DataFrame
+) -> list[dict[str, Any]]:
+    return [
+        name_entry_from_ipa(ipa, valid_names, reference_ipa, distances)
+        for ipa in ipas
+    ]
 
 
 def main():
@@ -142,8 +157,9 @@ def main():
     )
     env.globals['valid_names'] = valid_names
     env.globals['distances'] = distances
-    env.globals['ipa_name_to_hun'] = ipa_name_to_hun
     env.globals['similarity_to'] = similarity_to
+    env.globals['name_entry_from_ipa'] = name_entry_from_ipa
+    env.globals['name_entries_from_ipas'] = name_entries_from_ipas
     template = env.get_template('report.html')
     with open('report.html', 'w', encoding='utf-8') as file:
         file.write(
