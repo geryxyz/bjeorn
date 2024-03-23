@@ -112,30 +112,27 @@ def similarity_to(name_ipa1: str, name_ipa2: str, distances: pandas.DataFrame) -
     return distances.loc[name_ipa1, name_ipa2]
 
 
-def name_entry_from_ipa(
-    ipa: str, valid_names: pandas.DataFrame,
-    reference_ipa: str, distances: pandas.DataFrame
+def name_entry_from_name(
+    name: str, reference_name: str,
+    valid_names: pandas.DataFrame, distances: pandas.DataFrame
 ) -> dict[str, Any]:
-    entry = valid_names.loc[valid_names.loc[:, 'ipa'] == ipa].iloc[0].to_dict()
-    entry['similarity'] = similarity_to(ipa, reference_ipa, distances)
+    reference_entry = valid_names.loc[valid_names.loc[:, 'name'] == reference_name].iloc[0].to_dict()
+    entry = valid_names.loc[valid_names.loc[:, 'name'] == name].iloc[0].to_dict()
+    entry['similarity'] = similarity_to(entry['ipa'], reference_entry['ipa'], distances)
     return entry
 
 
-def name_entries_from_ipas(
-    ipas: list[str], valid_names: pandas.DataFrame,
-    reference_ipa: str, distances: pandas.DataFrame
+def name_entries_from_names(
+    names: list[str], reference_name: str,
+    valid_names: pandas.DataFrame, distances: pandas.DataFrame
 ) -> list[dict[str, Any]]:
-    return [
-        name_entry_from_ipa(ipa, valid_names, reference_ipa, distances)
-        for ipa in ipas
-    ]
+    return [name_entry_from_name(name, reference_name, valid_names, distances) for name in names]
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('name', type=str, help='Reference name')
+    parser.add_argument('names', type=str, nargs='+', help='Reference name')
     args = parser.parse_args()
-    name = args.name
 
     valid_names = load_names()
     distances = calculate_distances(valid_names)
@@ -143,13 +140,23 @@ def main():
     valid_names.loc[:, 'community'] = valid_names.loc[:, 'ipa'].apply(
         lambda name: community_id_of_name(name, communities)
     )
-
-    name_ipa = valid_names.loc[valid_names.loc[:, 'name'] == name, 'ipa'].values[0]
     similar_count = 30
-    similar_names = distances.loc[:, name_ipa].sort_values().head(similar_count).index
 
-    reference_community = valid_names.loc[valid_names.loc[:, 'name'] == name, 'community'].values[0]
-    names_of_reference_community = valid_names.loc[valid_names.loc[:, 'community'] == reference_community, 'ipa']
+    reference_names = args.names
+
+    similar_names = {}
+    names_of_reference_community = {}
+    for name in reference_names:
+        entry = name_entry_from_name(name, name, valid_names, distances)
+        similar_ipas = distances.loc[:, entry['ipa']].sort_values().head(similar_count).index.tolist()
+        similar_names[name] = list(
+            valid_names.loc[valid_names.loc[:, 'ipa'] == ipa, 'name'].iloc[0] for ipa in similar_ipas
+        )
+        reference_community = valid_names.loc[valid_names.loc[:, 'name'] == name, 'community'].values[0]
+        names_of_reference_community[name] = valid_names.loc[
+            valid_names.loc[:, 'community'] == reference_community,
+            'name'
+        ].tolist()
 
     env = jinja2.Environment(
         loader=jinja2.FileSystemLoader('template'),
@@ -158,14 +165,12 @@ def main():
     env.globals['valid_names'] = valid_names
     env.globals['distances'] = distances
     env.globals['similarity_to'] = similarity_to
-    env.globals['name_entry_from_ipa'] = name_entry_from_ipa
-    env.globals['name_entries_from_ipas'] = name_entries_from_ipas
+    env.globals['name_entry_from_name'] = name_entry_from_name
+    env.globals['name_entries_from_names'] = name_entries_from_names
     template = env.get_template('report.html')
     with open('report.html', 'w', encoding='utf-8') as file:
         file.write(
             template.render(
-                reference_name=args.name,
-                reference_name_ipa=valid_names.loc[valid_names.loc[:, 'name'] == name, 'ipa'].values[0],
                 similar_names=similar_names,
                 names_of_reference_community=names_of_reference_community,
             )

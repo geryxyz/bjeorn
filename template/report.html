@@ -1,18 +1,16 @@
 {% macro name_display(name_entry) %}
-    <tr>
-        <th class="{{ name_entry['sex'] }}">
-            {{ name_entry['name'] }}
-        </th>
+    <span class="name {{ name_entry['sex'] }}">
+        {{ name_entry['name'] }}
         {% if name_entry['sex'] == 'male' %}
-            <td>&male;</td>
+            &male;
         {% elif name_entry['sex'] == 'female' %}
-            <td>&female;</td>
+            &female;
         {% else %}
-            <td>?</td>
+            ?
         {% endif %}
-        <td>[{{ name_entry['ipa'] }}]</td>
-        <td class="number">{{ name_entry['similarity'] | round(1) }}</td>
-    </tr>
+        &nbsp;[{{ name_entry['ipa'] }}]
+        &nbsp;{{ name_entry['similarity'] | round(1) }}
+    </span>
 {% endmacro %}
 
 <!DOCTYPE html>
@@ -21,54 +19,37 @@
     <meta charset="UTF-8">
     <title>Report</title>
     <style>
-        table {
-            border-collapse: collapse;
+        span.name {
+            display: inline-block;
+            border: black 1px solid;
+            margin: .5ex;
+            padding: .5ex;
         }
 
-        th, td {
-            border: none;
-            padding: 8px;
+        .male {
+            color: royalblue;
         }
 
-        th.male {
-            background: lightblue;
-        }
-
-        th.female {
-            background: lightpink;
-        }
-
-        td.number {
-            text-align: right;
-            font-family: monospace;
+        .female {
+            color: deeppink;
         }
     </style>
 </head>
 <body>
 <h1>Report</h1>
 
-<h2>Similar Names ({{ similar_names | length }} names) to {{ reference_name }}</h2>
-<table>
-    <tr>
-        <th>Name</th>
-        <th>IPA</th>
-        <th>Similarity</th>
-    </tr>
-    {% for name_entry in name_entries_from_ipas(similar_names, valid_names, reference_name_ipa, distances) | sort(attribute='similarity') %}
+{% for reference_name, similars in similar_names.items() %}
+    <h2>Similar Names ({{ similars | length }} names) to {{ reference_name }}</h2>
+    {% for name_entry in name_entries_from_names(similars, reference_name, valid_names, distances) | sort(attribute='similarity') %}
         {{ name_display(name_entry) }}
     {% endfor %}
-</table>
+{% endfor %}
 
-<h2>Names of Reference Community ({{ names_of_reference_community | length }} names)</h2>
-<table>
-    <tr>
-        <th>Name</th>
-        <th>IPA</th>
-        <th>Similarity</th>
-    </tr>
-    {% for name_entry in name_entries_from_ipas(names_of_reference_community, valid_names, reference_name_ipa, distances) | sort(attribute='similarity') %}
+{% for reference_name, cluster in names_of_reference_community.items() %}
+    <h2>Names of {{ reference_name }}'s Community ({{ cluster | length }} names)</h2>
+    {% for name_entry in name_entries_from_names(cluster, reference_name, valid_names, distances) | sort(attribute='similarity') %}
         {{ name_display(name_entry) }}
     {% endfor %}
-</table>
+{% endfor %}
 </body>
 </html>
