@@ -40,6 +40,9 @@
 
 {% for reference_name, similars in similar_names.items() %}
     <h2>Similar Names ({{ similars | length }} names) to {{ reference_name }}</h2>
+    <img src="{{ reference_name }}_histogram.png" alt="{{ reference_name }}" width="30%"/>
+    <img src="{{ reference_name }}_distances.png" alt="{{ reference_name }}" width="30%"/>
+    <br/>
     {% for name_entry in name_entries_from_names(similars, reference_name, valid_names, distances) | sort(attribute='similarity') %}
         {{ name_display(name_entry) }}
     {% endfor %}
@@ -47,6 +50,9 @@
 
 {% for reference_name, cluster in names_of_reference_community.items() %}
     <h2>Names of {{ reference_name }}'s Community ({{ cluster | length }} names)</h2>
+    <img src="{{ reference_name }}_histogram.png" alt="{{ reference_name }}" width="30%"/>
+    <img src="{{ reference_name }}_distances.png" alt="{{ reference_name }}" width="30%"/>
+    <br/>
     {% for name_entry in name_entries_from_names(cluster, reference_name, valid_names, distances) | sort(attribute='similarity') %}
         {{ name_display(name_entry) }}
     {% endfor %}

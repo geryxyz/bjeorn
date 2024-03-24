@@ -14,6 +14,7 @@ import panphon.distance
 import networkx
 import structlog
 import jinja2
+import matplotlib.pyplot as plt
 
 logger = structlog.stdlib.get_logger()
 
@@ -69,7 +70,7 @@ def percentile(name: str, distances: pandas.DataFrame, percent: float) -> pandas
     return select_column[select_column <= limit]
 
 
-def create_graph(distances: pandas.DataFrame, percent: float = .0005):
+def create_graph(distances: pandas.DataFrame, percent: float = .0005):  # 100.05
     logger.info("Creating graph")
     graph = networkx.Graph()
     for column in tqdm(distances.columns, desc="Creating graph", unit="names"):
@@ -148,6 +149,25 @@ def main():
     names_of_reference_community = {}
     for name in reference_names:
         entry = name_entry_from_name(name, name, valid_names, distances)
+
+        ax: plt.Axes
+        fig, ax = plt.subplots()
+        ax.hist(distances.loc[:, entry['ipa']], bins=42)
+        ax.set_title(f'Distribution of distances to {name}')
+        ax.set_xlabel('Distance')
+        ax.set_ylabel('Count')
+        plt.savefig(f'{name}_histogram.png')
+        plt.close(fig)
+
+        ax: plt.Axes
+        fig, ax = plt.subplots()
+        ax.plot(distances.loc[:, entry['ipa']].sort_values().values)
+        ax.set_title(f'Distances to {name}')
+        ax.set_xlabel('Name')
+        ax.set_ylabel('Distance')
+        plt.savefig(f'{name}_distances.png')
+        plt.close(fig)
+
         similar_ipas = distances.loc[:, entry['ipa']].sort_values().head(similar_count).index.tolist()
         similar_names[name] = list(
             valid_names.loc[valid_names.loc[:, 'ipa'] == ipa, 'name'].iloc[0] for ipa in similar_ipas
